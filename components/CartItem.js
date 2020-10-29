@@ -61,7 +61,7 @@ export default function CartItem(props) {
           colors={[
             'rgba(0, 0, 0, 0)',
             'rgba(0, 0, 0, 0.3)',
-            'rgba(0, 0, 0, 0.7)',
+            'rgba(0, 0, 0, 0.5)',
           ]}>
           <View style={{alignSelf: 'flex-end'}}>
             <Text style={styles.nameHotel}>{hotelName}</Text>
@@ -79,7 +79,7 @@ export default function CartItem(props) {
         </LinearGradient>
       </ImageBackground>
 
-      {service.length !== 0 ? dichVuJSX : null}
+      {/* {service[0] !== '' ? dichVuJSX : null} */}
       <Text style={styles.price}>
         {Global.currencyFormat((giaPhong * soPhong * soDem).toString())} đ
       </Text>
@@ -123,11 +123,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: width / 20,
+    textAlign: 'right',
   },
   nameRoom: {
     color: 'white',
     fontSize: width / 28,
     alignSelf: 'flex-end',
+    textAlign: 'right',
   },
   infoCont: {
     marginHorizontal: 10,

@@ -60,7 +60,12 @@ export default function RoomList({navigation, route}) {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Image source={backIcon} style={styles.backIcon} />
           </TouchableOpacity>
-          <Text style={styles.headerText}>{tensp}</Text>
+          <Text
+            style={styles.headerText}
+            numberOfLines={1}
+            ellipsizeMode="tail">
+            {tensp}
+          </Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.navigate('CART', {fromMain: false})}>
@@ -119,6 +124,7 @@ const styles = StyleSheet.create({
     color: '#fff1dc',
     fontSize: width / 20,
     fontWeight: 'bold',
+    width: width / 1.3,
   },
   cartIcon: {
     width: width / 15,

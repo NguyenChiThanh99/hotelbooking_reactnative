@@ -15,8 +15,12 @@ import CalendarPicker from 'react-native-calendar-picker';
 import moment from 'moment';
 import NumericInput from 'react-native-numeric-input';
 import CheckBox from '@react-native-community/checkbox';
+import {useSelector, useDispatch} from 'react-redux';
+import Toast from 'react-native-root-toast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Global from './Global';
+import {updateCart} from '../actions';
 
 import userIcon from '../images/user-1.png';
 import userIcon2 from '../images/user-2.png';
@@ -34,7 +38,7 @@ export default function RoomList(props) {
     id,
     navigation,
     idkhachsan,
-    tenkhachsan,
+    tenkhacksan,
   } = props;
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStartDate, setSelectedStartDate] = useState(new Date());
@@ -63,6 +67,82 @@ export default function RoomList(props) {
   const maxDate = new Date(2021, 12, 31);
   var sodem = (selectedEndDate - selectedStartDate) / 86400000;
   moment.locale();
+
+  const cart = useSelector((state) => state.cart);
+  const dispatch = useDispatch();
+  const addToCart = () => {
+    if (sodem < 1) {
+      Toast.show('Bạn chưa chọn ngày nhận phòng và trả phòng', {
+        position: -20,
+        duration: 2000,
+      });
+      return;
+    }
+    const newCart = {
+      idkhachsan: idkhachsan,
+      id: id,
+      image: image,
+      hotelName: tenkhacksan,
+      roomName: name,
+      soDem: sodem,
+      soPhong: sophong,
+      dichVu: {
+        buffet: buffet,
+        spa: spa,
+        phonghop: phonghop,
+        giatui: giatui,
+        xeduadon: xeduadon,
+        dvphong: dvphong,
+        doingoaite: doingoaite,
+      },
+      giaPhong: price,
+      ngayNhanPhong: moment(selectedStartDate).format('l'),
+      ngayTraPhong: moment(selectedEndDate).format('l'),
+    };
+
+    var flag = false;
+    if (cart.length === 0) {
+      dispatch(updateCart([newCart]));
+      storeData([newCart]);
+    } else {
+      for (var i = 0; i < cart.length; i++) {
+        if (cart[i].id === id) {
+          flag = true;
+          cart[i].soDem = sodem;
+          cart[i].soPhong = sophong;
+          cart[i].dichVu = {
+            buffet: buffet,
+            spa: spa,
+            phonghop: phonghop,
+            giatui: giatui,
+            xeduadon: xeduadon,
+            dvphong: dvphong,
+            doingoaite: doingoaite,
+          };
+          cart[i].ngayNhanPhong = moment(selectedStartDate).format('l');
+          cart[i].ngayTraPhong = moment(selectedEndDate).format('l');
+          dispatch(updateCart(cart));
+          storeData(cart);
+        }
+      }
+      if (flag === false) {
+        cart.push(newCart);
+        dispatch(updateCart(cart));
+        storeData(cart);
+      }
+    }
+    setModalVisible(!modalVisible);
+    navigation.navigate('CART', {fromMain: false});
+  };
+
+  const storeData = async (value) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem('@cart', jsonValue);
+    } catch (e) {
+      console.log('Error: ' + e);
+    }
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -285,8 +365,7 @@ export default function RoomList(props) {
                   <TouchableOpacity
                     style={styles.btn2}
                     onPress={() => {
-                      setModalVisible(!modalVisible);
-                      navigation.navigate('CART', {fromMain: false});
+                      addToCart();
                     }}>
                     <Text style={styles.btnText2}>Thêm vào giỏ hàng</Text>
                   </TouchableOpacity>

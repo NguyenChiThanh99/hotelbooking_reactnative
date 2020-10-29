@@ -3,6 +3,8 @@ import {StyleSheet, Image, Dimensions, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {Badge} from 'react-native-elements';
+import {useSelector, useDispatch} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import home from '../images/home.png';
 import home_s from '../images/home-s.png';
@@ -26,11 +28,13 @@ import History from './History';
 import BookingDetail from './BookingDetail';
 import Search from './Search';
 import Review from './Review';
+import {updateCart} from '../actions';
 
 const Tab = createBottomTabNavigator();
 const MainStack = createStackNavigator();
 
 function Tabs({navigation}) {
+  const cartLength = useSelector((state) => state.cart.length);
   return (
     <Tab.Navigator
       initialRouteName={'Trang chủ'}
@@ -53,7 +57,7 @@ function Tabs({navigation}) {
               <View>
                 <Image style={styles.iconTabbar} source={cart_s} />
                 <Badge
-                  value={3}
+                  value={cartLength}
                   containerStyle={styles.containerStyle}
                   badgeStyle={styles.badgeStyle}
                 />
@@ -62,7 +66,7 @@ function Tabs({navigation}) {
               <View>
                 <Image style={styles.iconTabbar} source={cart} />
                 <Badge
-                  value={3}
+                  value={cartLength}
                   containerStyle={styles.containerStyle}
                   badgeStyle={styles.badgeStyle2}
                 />
@@ -91,8 +95,24 @@ function Tabs({navigation}) {
     </Tab.Navigator>
   );
 }
+var flag = false;
 
 export default function Main() {
+  const dispatch = useDispatch();
+  const getData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem('@cart');
+      dispatch(updateCart(JSON.parse(jsonValue)));
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+      console.log('Error: ' + e);
+    }
+  };
+  if (flag === false) {
+    getData();
+    flag = true;
+  }
+
   return (
     <MainStack.Navigator initialRouteName="TABS">
       <MainStack.Screen

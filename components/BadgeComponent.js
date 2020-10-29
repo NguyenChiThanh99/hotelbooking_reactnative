@@ -1,15 +1,17 @@
 import React from 'react';
 import {StyleSheet, View, Image, Dimensions} from 'react-native';
 import {Badge} from 'react-native-elements';
+import {useSelector} from 'react-redux';
 
 import cartIcon from '../images/cart-fff1dc.png';
 
 export default function BadgeComponent({navigation}) {
+  const cartLength = useSelector((state) => state.cart.length);
   return (
     <View>
       <Image source={cartIcon} style={styles.cartIcon} />
       <Badge
-        value={3}
+        value={cartLength}
         containerStyle={styles.containerStyle}
         badgeStyle={styles.badgeStyle}
       />

@@ -1,6 +1,6 @@
 /* eslint-disable no-shadow */
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, {useState, useReducer} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {
   StyleSheet,
@@ -20,9 +20,12 @@ import moment from 'moment';
 import NumericInput from 'react-native-numeric-input';
 import CheckBox from '@react-native-community/checkbox';
 import Toast from 'react-native-root-toast';
+import {useSelector, useDispatch} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Global from './Global';
 import CartItem from './CartItem';
+import {updateCart} from '../actions';
 
 import backIcon from '../images/chevron-left-fff1dc.png';
 var countExit = 0;
@@ -88,91 +91,31 @@ export default function Cart({route, navigation}) {
     </TouchableOpacity>
   );
 
-  const dataSample = [
-    {
-      id: 1,
-      image:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu: {
-        buffet: true,
-        spa: false,
-        phonghop: true,
-        giatui: false,
-        xeduadon: true,
-        dvphong: false,
-        doingoaite: true,
-      },
-      giaPhong: '653016',
-      ngayNhanPhong: '10/21/2020',
-      ngayTraPhong: '10/23/2020',
-    },
-    {
-      id: 2,
-      image:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu: {
-        buffet: false,
-        spa: true,
-        phonghop: true,
-        giatui: true,
-        xeduadon: true,
-        dvphong: false,
-        doingoaite: true,
-      },
-      giaPhong: '653016',
-      ngayNhanPhong: '10/21/2020',
-      ngayTraPhong: '10/24/2020',
-    },
-    {
-      id: 3,
-      image:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu: {
-        buffet: true,
-        spa: false,
-        phonghop: true,
-        giatui: false,
-        xeduadon: false,
-        dvphong: false,
-        doingoaite: true,
-      },
-      giaPhong: '653016',
-      ngayNhanPhong: '10/21/2020',
-      ngayTraPhong: '10/25/2020',
-    },
-  ];
+  const cartData = useSelector((state) => state.cart);
+  const dispatch = useDispatch();
 
   var total = 0;
-  for (var i = 0; i < dataSample.length; i++) {
-    total +=
-      dataSample[i].giaPhong * dataSample[i].soDem * dataSample[i].soPhong;
+  for (var i = 0; i < cartData.length; i++) {
+    total += cartData[i].giaPhong * cartData[i].soDem * cartData[i].soPhong;
+  }
+
+  const [, forceUpdate] = useReducer((x) => x + 1, 0);
+  function rerenderComponent() {
+    forceUpdate();
   }
 
   const deleteItem = (rowMap, data) => {
     Alert.alert(
-      'Bạn có chắc muốn xóa phòng ' +
+      '',
+      'Bạn có chắc muốn xóa ' +
         data.roomName +
         ' của khách sạn ' +
         data.hotelName +
         '?',
-      '',
       [
         {
           text: 'Hủy bỏ',
           onPress: () => {
-            console.log('Hủy bỏ');
             rowMap[data.id].closeRow();
           },
           style: 'cancel',
@@ -180,13 +123,46 @@ export default function Cart({route, navigation}) {
         {
           text: 'Xóa phòng',
           onPress: () => {
-            console.log('Xóa phòng');
-            rowMap[data.id].closeRow();
+            var index = cartData.indexOf(data);
+            cartData.splice(index, 1);
+            dispatch(updateCart(cartData));
+            storeData(cartData);
+            rerenderComponent();
           },
         },
       ],
       {cancelable: true},
     );
+  };
+
+  const updateRow = () => {
+    if (sodem < 1) {
+      Toast.show('Bạn chưa chọn ngày nhận phòng và trả phòng', {
+        position: -20,
+        duration: 2000,
+      });
+      return;
+    }
+    var i = cartData.indexOf(item);
+    cartData[i].soDem = sodem;
+    cartData[i].soPhong = sophong;
+    cartData[i].dichVu = {
+      buffet: buffet,
+      spa: spa,
+      phonghop: phonghop,
+      giatui: giatui,
+      xeduadon: xeduadon,
+      dvphong: dvphong,
+      doingoaite: doingoaite,
+    };
+    cartData[i].ngayNhanPhong = moment(selectedStartDate).format('l');
+    cartData[i].ngayTraPhong = moment(selectedEndDate).format('l');
+
+    dispatch(updateCart(cartData));
+    storeData(cartData);
+    setModalVisible(!modalVisible);
+    rowMap[item.id].closeRow();
+    rerenderComponent();
   };
 
   const editRow = (rowMap, data) => {
@@ -261,6 +237,15 @@ export default function Cart({route, navigation}) {
     return buffet + spa + phonghop + giatui + xeduadon + dvphong + doingoaite;
   };
 
+  const storeData = async (value) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem('@cart', jsonValue);
+    } catch (e) {
+      console.log('Error: ' + e);
+    }
+  };
+
   return (
     <View style={styles.wrapper}>
       {/* Header */}
@@ -277,7 +262,7 @@ export default function Cart({route, navigation}) {
 
       <SwipeListView
         contentContainerStyle={styles.listHotel}
-        data={dataSample}
+        data={cartData}
         renderItem={renderItem}
         renderHiddenItem={renderHiddenItem}
         rightOpenValue={-150}
@@ -480,8 +465,7 @@ export default function Cart({route, navigation}) {
                   <TouchableOpacity
                     style={styles.btn2}
                     onPress={() => {
-                      setModalVisible(!modalVisible);
-                      rowMap[item.id].closeRow();
+                      updateRow();
                     }}>
                     <Text style={styles.btnText2}>Hoàn tất</Text>
                   </TouchableOpacity>
