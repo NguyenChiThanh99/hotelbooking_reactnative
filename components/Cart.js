@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 /* eslint-disable no-shadow */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useReducer} from 'react';
@@ -136,7 +137,17 @@ export default function Cart({route, navigation}) {
   };
 
   const updateRow = () => {
-    if (sodem < 1) {
+    const startDate = ~~(selectedStartDate / 86400000);
+    const currDate = ~~(new Date() / 86400000);
+    const endDate = ~~(selectedEndDate / 86400000);
+
+    if (startDate < currDate || endDate < currDate) {
+      Toast.show('Vui lòng kiểm tra lại ngày nhận phòng và ngày trả phòng', {
+        position: -20,
+        duration: 2000,
+      });
+      return;
+    } else if (sodem < 1) {
       Toast.show('Bạn chưa chọn ngày nhận phòng và trả phòng', {
         position: -20,
         duration: 2000,
@@ -195,6 +206,7 @@ export default function Cart({route, navigation}) {
       giaPhong={data.item.giaPhong}
       ngayNhanPhong={data.item.ngayNhanPhong}
       ngayTraPhong={data.item.ngayTraPhong}
+      from={true} // true is from cart, false is from payment
     />
   );
 

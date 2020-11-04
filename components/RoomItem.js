@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 /* eslint-disable radix */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
@@ -71,7 +72,17 @@ export default function RoomList(props) {
   const cart = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const addToCart = () => {
-    if (sodem < 1) {
+    const startDate = ~~(selectedStartDate / 86400000);
+    const currDate = ~~(new Date() / 86400000);
+    const endDate = ~~(selectedEndDate / 86400000);
+
+    if (startDate < currDate || endDate < currDate) {
+      Toast.show('Vui lòng kiểm tra lại ngày nhận phòng và ngày trả phòng', {
+        position: -20,
+        duration: 2000,
+      });
+      return;
+    } else if (sodem < 1) {
       Toast.show('Bạn chưa chọn ngày nhận phòng và trả phòng', {
         position: -20,
         duration: 2000,

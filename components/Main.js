@@ -102,8 +102,8 @@ export default function Main() {
   const getData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem('@cart');
-      dispatch(updateCart(JSON.parse(jsonValue)));
-      return jsonValue != null ? JSON.parse(jsonValue) : null;
+      dispatch(updateCart(jsonValue !== null ? JSON.parse(jsonValue) : []));
+      return jsonValue !== null ? JSON.parse(jsonValue) : null;
     } catch (e) {
       console.log('Error: ' + e);
     }

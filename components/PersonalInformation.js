@@ -8,6 +8,7 @@ import {
   TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Toast from 'react-native-root-toast';
 
 import Global from './Global';
 
@@ -20,6 +21,32 @@ export default function PersonalInformation({navigation}) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+
+  const goToPayment = () => {
+    if (name === '' || phone === '' || email === '') {
+      Toast.show('Vui lòng nhập tất cả thông tin', {
+        position: -20,
+        duration: 2000,
+      });
+    } else if (name.length < 3) {
+      Toast.show('Vui lòng nhập Họ và Tên ít nhất 3 ký tự', {
+        position: -20,
+        duration: 2000,
+      });
+    } else if (!Global.validateEmail(email)) {
+      Toast.show('Vui lòng kiểm tra lại Email', {
+        position: -20,
+        duration: 2000,
+      });
+    } else if (phone.length < 10) {
+      Toast.show('Vui lòng nhập đúng số điện thoại', {
+        position: -20,
+        duration: 2000,
+      });
+    } else {
+      navigation.navigate('PAYMENT', {name: name, email: email, phone: phone});
+    }
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -106,9 +133,7 @@ export default function PersonalInformation({navigation}) {
         colors={['rgba(248, 161, 112, 1)', 'rgba(255, 205, 97, 1)']}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}>
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={() => navigation.navigate('PAYMENT')}>
+        <TouchableOpacity style={styles.btn} onPress={() => goToPayment()}>
           <Text style={styles.btnText}>Thanh toán</Text>
         </TouchableOpacity>
       </LinearGradient>

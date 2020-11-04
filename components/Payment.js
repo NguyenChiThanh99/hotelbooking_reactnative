@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,13 +6,21 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-root-toast';
 import stripe from 'tipsi-stripe';
+import {useSelector, useDispatch} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Global from './Global';
 import CartItem from './CartItem';
+import {updateCart} from '../actions';
+
+import {doPayment} from '../Api/doPayment';
+import order from '../Api/order';
+import deleteOrder from '../Api/deleteOrder';
 
 import infoIcon from '../images/info.png';
 import backIcon from '../images/chevron-left-fff1dc.png';
@@ -24,22 +32,93 @@ stripe.setOptions({
   publishableKey: 'pk_test_nNsT1Tapm2K01DErmIgoCYka00Xl2AhJAY',
 });
 
-export default function Payment({navigation}) {
+export default function Payment({navigation, route}) {
+  const infoUser = {
+    name: route.params.name,
+    email: route.params.email,
+    phone: route.params.phone,
+  };
+  const cartData = useSelector((state) => state.cart);
+  const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState(false);
+  var orderID = 0;
+
+  const delete_Order = () => {
+    setPending(true);
+    deleteOrder
+      .deleteOrder(orderID)
+      .then((responseJson) => {
+        setPending(false);
+        console.log('Deleted order: ' + orderID);
+      })
+      .catch((err) => {
+        setPending(false);
+        console.log(err);
+        return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+          position: -20,
+          duration: 2500,
+        });
+      });
+  };
+
+  const dathang = () => {
+    setLoading(true);
+    setPending(true);
+    var dichVuArray = [];
+    for (let i = 0; i < cartData.length; i++) {
+      dichVuArray.push(convertToString(cartData[i].dichVu));
+    }
+    order
+      .order(
+        infoUser.name,
+        infoUser.email,
+        infoUser.phone,
+        8,
+        cartData,
+        dichVuArray,
+      )
+      .then((responseJson) => {
+        orderID = responseJson;
+        setLoading(false);
+        setPending(false);
+        payment();
+      })
+      .catch((err) => {
+        delete_Order();
+        setLoading(false);
+        setPending(false);
+        console.log(err);
+        return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+          position: -20,
+          duration: 2500,
+        });
+      });
+  };
+
+  const dispatch = useDispatch();
   const payment = () => {
+    setPending(true);
     return stripe
       .paymentRequestWithCardForm()
       .then((stripeTokenInfo) => {
-        console.log(stripeTokenInfo);
-        return {
-          //Code API Thanh toán here
-        };
+        return doPayment(
+          total,
+          stripeTokenInfo.tokenId,
+          infoUser.email,
+          orderID,
+        );
       })
       .then(() => {
-        console.log('Payment succeeded!');
         //Thanh toán thành công
+        console.log('Payment succeeded!');
+        setPending(false);
+        dispatch(updateCart([]));
+        storeData([]);
         navigation.navigate('TABS');
       })
       .catch((error) => {
+        delete_Order();
+        setPending(false);
         Toast.show('Thanh toán thất bại:\n' + error, {
           position: -20,
           duration: 2500,
@@ -49,43 +128,6 @@ export default function Payment({navigation}) {
       })
       .finally(() => {});
   };
-
-  const infoUser = {
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@gmail.com',
-    phone: '0123456789',
-  };
-
-  const dataSample = [
-    {
-      id: 1,
-      image:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu:
-        'Dịch vụ phòng họp, Dịch vụ Spa, Dịch vụ giặt ủi quần áo, Dịch vụ xe đưa đón',
-      giaPhong: '653016',
-      ngayNhanPhong: '10/15/2020',
-      ngayTraPhong: '10/18/2020',
-    },
-    {
-      id: 2,
-      image:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu:
-        'Dịch vụ phòng họp, Dịch vụ Spa, Dịch vụ giặt ủi quần áo, Dịch vụ xe đưa đón',
-      giaPhong: '653016',
-      ngayNhanPhong: '10/15/2020',
-      ngayTraPhong: '10/18/2020',
-    },
-  ];
 
   const renderHeader = () => {
     return (
@@ -131,10 +173,29 @@ export default function Payment({navigation}) {
   };
 
   var total = 0;
-  for (var i = 0; i < dataSample.length; i++) {
-    total +=
-      dataSample[i].giaPhong * dataSample[i].soDem * dataSample[i].soPhong;
+  for (var i = 0; i < cartData.length; i++) {
+    total += cartData[i].giaPhong * cartData[i].soDem * cartData[i].soPhong;
   }
+
+  const convertToString = (dichvu) => {
+    var buffet = dichvu.buffet ? 'Bữa sáng Bufet, ' : '';
+    var spa = dichvu.spa ? 'Dịch vụ Spa, ' : '';
+    var phonghop = dichvu.phonghop ? 'Dịch vụ phòng họp, ' : '';
+    var giatui = dichvu.giatui ? 'Dịch vụ giặt ủi quần áo, ' : '';
+    var xeduadon = dichvu.xeduadon ? 'Dịch vụ xe đưa đón, ' : '';
+    var dvphong = dichvu.dvphong ? 'Dịch vụ phòng 24/24, ' : '';
+    var doingoaite = dichvu.doingoaite ? 'Thu đổi ngoại tệ' : '';
+    return buffet + spa + phonghop + giatui + xeduadon + dvphong + doingoaite;
+  };
+
+  const storeData = async (value) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem('@cart', jsonValue);
+    } catch (e) {
+      console.log('Error: ' + e);
+    }
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -145,7 +206,10 @@ export default function Payment({navigation}) {
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}>
         <View style={styles.titleCont}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            onPress={() => {
+              pending ? null : navigation.goBack();
+            }}>
             <Image source={backIcon} style={styles.backIcon} />
           </TouchableOpacity>
           <Text style={styles.headerText}>Xác nhận và Thanh toán</Text>
@@ -160,7 +224,7 @@ export default function Payment({navigation}) {
           ListHeaderComponent={renderHeader}
           contentContainerStyle={styles.listHotel}
           showsHorizontalScrollIndicator={false}
-          data={dataSample}
+          data={cartData}
           renderItem={({item}) => {
             return (
               <CartItem
@@ -170,10 +234,11 @@ export default function Payment({navigation}) {
                 roomName={item.roomName}
                 soDem={item.soDem}
                 soPhong={item.soPhong}
-                dichVu={item.dichVu}
+                dichVu={convertToString(item.dichVu)}
                 giaPhong={item.giaPhong}
                 ngayNhanPhong={item.ngayNhanPhong}
                 ngayTraPhong={item.ngayTraPhong}
+                from={false} // true is from cart, false is from payment
               />
             );
           }}
@@ -190,8 +255,18 @@ export default function Payment({navigation}) {
           colors={['rgba(248, 161, 112, 1)', 'rgba(255, 205, 97, 1)']}
           start={{x: 0, y: 0}}
           end={{x: 1, y: 0}}>
-          <TouchableOpacity style={styles.btn} onPress={() => payment()}>
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={() => {
+              pending ? null : dathang();
+            }}>
+            <View style={styles.loading} />
             <Text style={styles.btnText}>Xác nhận và Thanh toán</Text>
+            <View style={styles.loading}>
+              {loading ? (
+                <ActivityIndicator animating={true} color="#fff" size="small" />
+              ) : null}
+            </View>
           </TouchableOpacity>
         </LinearGradient>
       </View>
@@ -244,6 +319,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     height: height / 14,
+    flexDirection: 'row',
   },
   btnText: {
     fontSize: width / 22,
@@ -334,5 +410,8 @@ const styles = StyleSheet.create({
     borderLeftColor: '#fff',
     borderRightColor: '#fff',
     borderWidth: 1,
+  },
+  loading: {
+    width: width / 8,
   },
 });

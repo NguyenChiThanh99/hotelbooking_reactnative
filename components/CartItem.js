@@ -17,6 +17,7 @@ export default function CartItem(props) {
     giaPhong,
     ngayNhanPhong,
     ngayTraPhong,
+    from,
   } = props;
   var service = dichVu.split(', ');
 
@@ -79,7 +80,7 @@ export default function CartItem(props) {
         </LinearGradient>
       </ImageBackground>
 
-      {/* {service[0] !== '' ? dichVuJSX : null} */}
+      {service[0] !== '' && from === false ? dichVuJSX : null}
       <Text style={styles.price}>
         {Global.currencyFormat((giaPhong * soPhong * soDem).toString())} đ
       </Text>

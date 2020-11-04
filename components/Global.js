@@ -10,6 +10,14 @@ module.exports = {
   currencyFormat: (num) => {
     return num.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
   },
-  link: 'http://192.168.1.55:8080/hotelbooking/',
+  validateEmail: (text) => {
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (reg.test(text) === false) {
+      return false;
+    } else {
+      return true;
+    }
+  },
+  link: 'http://192.168.1.41:8080/hotelbooking/',
   //link: 'http://192.168.1.25:8080/hotelbooking/',
 };
