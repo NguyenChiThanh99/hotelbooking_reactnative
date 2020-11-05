@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,85 +8,42 @@ import {
   FlatList,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Toast from 'react-native-root-toast';
+
+import historyBooked from '../Api/historyBooked';
 
 import Global from './Global';
 import BadgeComponent from './BadgeComponent';
 import HistoryItem from './HistoryItem';
+import Loading from './Loading';
 
 import backIcon from '../images/chevron-left-fff1dc.png';
 
 export default function History({navigation}) {
-  const dataSample = [
-    {
-      id: 1,
-      imageRoom:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      imageHotel:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu: {
-        buffet: true,
-        spa: false,
-        phonghop: true,
-        giatui: false,
-        xeduadon: true,
-        dvphong: false,
-        doingoaite: true,
-      },
-      giaPhong: '653016',
-      ngayNhanPhong: '10/21/2020',
-      ngayTraPhong: '10/23/2020',
-    },
-    {
-      id: 2,
-      imageRoom:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      imageHotel:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu: {
-        buffet: false,
-        spa: true,
-        phonghop: true,
-        giatui: true,
-        xeduadon: true,
-        dvphong: false,
-        doingoaite: true,
-      },
-      giaPhong: '653016',
-      ngayNhanPhong: '10/21/2020',
-      ngayTraPhong: '10/24/2020',
-    },
-    {
-      id: 3,
-      imageRoom:
-        'https://q-cf.bstatic.com/xdata/images/hotel/max1024x768/140719216.jpg?k=54e2a279cf6a6cac89505439fcbb37631209ac775e7153ddbc1e5a14e45e3bb1&o=',
-      imageHotel:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      hotelName: 'Saigon Sparkle Hotel',
-      roomName: 'Phòng giường đôi',
-      soDem: 3,
-      soPhong: 1,
-      dichVu: {
-        buffet: true,
-        spa: false,
-        phonghop: true,
-        giatui: false,
-        xeduadon: false,
-        dvphong: false,
-        doingoaite: true,
-      },
-      giaPhong: '653016',
-      ngayNhanPhong: '10/21/2020',
-      ngayTraPhong: '10/25/2020',
-    },
-  ];
+  useEffect(() => {
+    loadHotelBooked();
+  }, []);
+
+  const [hotel_Booked, setHotel_Booked] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadHotelBooked = () => {
+    setLoading(true);
+    historyBooked
+      .historyBooked(8)
+      .then((responseJson) => {
+        setHotel_Booked(responseJson);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+        return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+          position: -20,
+          duration: 2500,
+        });
+      });
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -108,27 +65,31 @@ export default function History({navigation}) {
         </TouchableOpacity>
       </LinearGradient>
 
-      <FlatList
-        contentContainerStyle={styles.listPlace}
-        showsHorizontalScrollIndicator={false}
-        data={dataSample}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('BOOKING_DETAIL', {item})}
-            key={item}>
-            <HistoryItem
-              id={item.id}
-              image={item.imageHotel}
-              hotelName={item.hotelName}
-              roomName={item.roomName}
-              soDem={item.soDem}
-              soPhong={item.soPhong}
-              giaPhong={item.giaPhong}
-            />
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item) => item.id.toString()}
-      />
+      {loading ? (
+        <Loading />
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.listPlace}
+          showsHorizontalScrollIndicator={false}
+          data={hotel_Booked}
+          renderItem={({item}) => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('BOOKING_DETAIL', {item})}
+              key={item}>
+              <HistoryItem
+                id={item.id}
+                image={item.hinhanhsp}
+                hotelName={item.tenkhachsan}
+                roomName={item.tenphong}
+                soDem={item.sodem}
+                soPhong={item.soluongphong}
+                giaPhong={item.giaphong}
+              />
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      )}
     </View>
   );
 }

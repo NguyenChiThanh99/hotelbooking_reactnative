@@ -6,7 +6,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Global from './Global';
 
 export default function HistoryItem(props) {
-  const {id, image, hotelName, roomName, soDem, soPhong, giaPhong} = props;
+  const {image, hotelName, roomName, soDem, soPhong, giaPhong} = props;
 
   return (
     <View style={styles.wrapper}>

@@ -29,6 +29,7 @@ import CartItem from './CartItem';
 import {updateCart} from '../actions';
 
 import backIcon from '../images/chevron-left-fff1dc.png';
+import homeIcon from '../images/home-fff1dc.png';
 var countExit = 0;
 
 export default function Cart({route, navigation}) {
@@ -89,6 +90,13 @@ export default function Cart({route, navigation}) {
   const backElement = (
     <TouchableOpacity onPress={() => navigation.goBack()} visible={false}>
       <Image source={backIcon} style={styles.backIcon} />
+    </TouchableOpacity>
+  );
+  const homeElement = (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('TABS')}
+      visible={false}>
+      <Image source={homeIcon} style={styles.homeIcon} />
     </TouchableOpacity>
   );
 
@@ -267,22 +275,42 @@ export default function Cart({route, navigation}) {
         start={{x: 0, y: 0}}
         end={{x: 1, y: 0}}>
         <View style={styles.titleCont}>
-          {route === undefined ? null : backElement}
-          <Text style={styles.headerText}>Giỏ hàng</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {route === undefined ? null : backElement}
+            <Text style={styles.headerText}>Giỏ hàng</Text>
+          </View>
+          {route === undefined ? null : homeElement}
         </View>
       </LinearGradient>
 
-      <SwipeListView
-        contentContainerStyle={styles.listHotel}
-        data={cartData}
-        renderItem={renderItem}
-        renderHiddenItem={renderHiddenItem}
-        rightOpenValue={-150}
-        previewRowKey={'0'}
-        previewOpenValue={-40}
-        previewOpenDelay={3000}
-        keyExtractor={(item) => item.id.toString()}
-      />
+      {cartData.length === 0 ? (
+        <Text
+          style={{
+            flex: 1,
+            alignSelf: 'center',
+            marginTop: height / 3,
+            color: '#999',
+          }}>
+          Không có sản phẩm nào trong giỏ hàng{' '}
+        </Text>
+      ) : (
+        <SwipeListView
+          contentContainerStyle={styles.listHotel}
+          data={cartData}
+          renderItem={renderItem}
+          renderHiddenItem={renderHiddenItem}
+          rightOpenValue={-150}
+          previewRowKey={'0'}
+          previewOpenValue={-40}
+          previewOpenDelay={3000}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      )}
 
       <View style={styles.footer}>
         <Text style={styles.total}>
@@ -515,11 +543,16 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginRight: 5,
   },
+  homeIcon: {
+    width: width / 15,
+    resizeMode: 'contain',
+  },
   titleCont: {
     flexDirection: 'row',
     height: height_header,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    width: width - 20,
   },
   listHotel: {
     padding: 10,
