@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
@@ -19,7 +20,7 @@ import Loading from './Loading';
 
 import backIcon from '../images/chevron-left-fff1dc.png';
 
-export default function History({navigation}) {
+export default function History({navigation, route}) {
   useEffect(() => {
     loadHotelBooked();
   }, []);
@@ -30,7 +31,7 @@ export default function History({navigation}) {
   const loadHotelBooked = () => {
     setLoading(true);
     historyBooked
-      .historyBooked(8)
+      .historyBooked(route.params.idUser)
       .then((responseJson) => {
         setHotel_Booked(responseJson);
         setLoading(false);

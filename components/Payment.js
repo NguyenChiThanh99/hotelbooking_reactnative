@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Global from './Global';
 import CartItem from './CartItem';
-import {updateCart} from '../actions';
+import {updateCart, updateHotel} from '../actions';
 
 import {doPayment} from '../Api/doPayment';
 import order from '../Api/order';
@@ -33,6 +33,7 @@ stripe.setOptions({
 });
 
 export default function Payment({navigation, route}) {
+  const user = useSelector((state) => state.user);
   const infoUser = {
     name: route.params.name,
     email: route.params.email,
@@ -73,7 +74,7 @@ export default function Payment({navigation, route}) {
         infoUser.name,
         infoUser.email,
         infoUser.phone,
-        8,
+        user.id,
         cartData,
         dichVuArray,
       )
@@ -114,7 +115,8 @@ export default function Payment({navigation, route}) {
         setPending(false);
         dispatch(updateCart([]));
         storeData([]);
-        navigation.navigate('TABS');
+        dispatch(updateHotel(true));
+        navigation.navigate('TABS', {payment: true});
       })
       .catch((error) => {
         delete_Order();
@@ -188,10 +190,12 @@ export default function Payment({navigation, route}) {
     return buffet + spa + phonghop + giatui + xeduadon + dvphong + doingoaite;
   };
 
+  const userid = useSelector((state) => state.user.id);
   const storeData = async (value) => {
+    var key = '@cart' + '_' + userid.toString();
     try {
       const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem('@cart', jsonValue);
+      await AsyncStorage.setItem(key, jsonValue);
     } catch (e) {
       console.log('Error: ' + e);
     }

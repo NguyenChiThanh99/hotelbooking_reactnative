@@ -9,11 +9,18 @@ import {
   Modal,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-root-toast';
+import {useDispatch, useSelector} from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Global from './Global';
+import {updateUser, updateCart} from '../actions';
+
+import updateUserInfo from '../Api/updateUserInfo';
+import updatePass from '../Api/updatePass';
 
 import userIcon from '../images/user-s.png';
 import nameIcon from '../images/name.png';
@@ -65,12 +72,164 @@ export default function Account({navigation}) {
   const [newPass, setnewPass] = useState('');
   const [renewPass, setrenewPass] = useState('');
 
-  const data = {
-    userName: 'samantha_doe',
-    password: '123456789',
-    name: 'Samantha Doe',
-    email: 'samantha_doe@gmail.com',
-    phone: '0123458875',
+  const user = useSelector((state) => state.user);
+  const [data, setData] = useState({
+    id: user.id,
+    userName: user.tendangnhap,
+    password: user.matkhau,
+    name: user.hoten,
+    email: user.email,
+    phone: user.sodienthoai,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [loading2, setLoading2] = useState(false);
+
+  const updateInfo = () => {
+    setLoading(true);
+    if (newName.length > 0 && newName.length < 3) {
+      setLoading(false);
+      return Toast.show('Vui lòng nhập Họ và Tên ít nhất 3 ký tự', {
+        position: -20,
+        duration: 2000,
+      });
+    }
+    if (newEmail.length > 0 && !Global.validateEmail(newEmail)) {
+      setLoading(false);
+      return Toast.show('Vui lòng kiểm tra lại Email', {
+        position: -20,
+        duration: 2000,
+      });
+    }
+    if (newPhone.length > 0 && newPhone.length < 10) {
+      setLoading(false);
+      return Toast.show('Vui lòng nhập đúng số điện thoại', {
+        position: -20,
+        duration: 2000,
+      });
+    }
+    updateUserInfo
+      .updateUserInfo(data.id, newName, newPhone, newEmail)
+      .then((responseJson) => {
+        if (responseJson === 'Fail') {
+          setLoading(false);
+          return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+            position: -20,
+            duration: 2000,
+          });
+        } else {
+          setData({
+            id: 8,
+            userName: user.tendangnhap,
+            password: user.matkhau,
+            name: newName === '' ? data.name : newName,
+            email: newEmail === '' ? data.email : newEmail,
+            phone: newPhone === '' ? data.phone : newPhone,
+          });
+          setLoading(false);
+          Toast.show('Cập nhật thông tin thành công', {
+            position: -20,
+            duration: 2000,
+          });
+          setModalUpdateInfo(!modalUpdateInfo);
+          setnewName('');
+          setnewEmail('');
+          setnewPhone('');
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+        return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+          position: -20,
+          duration: 2000,
+        });
+      });
+  };
+
+  const update_Pass = () => {
+    setLoading2(true);
+    if (newPass.length === 0 || renewPass.length === 0) {
+      setLoading2(false);
+      return Toast.show('Vui lòng nhập tất cả các thông tin', {
+        position: -20,
+        duration: 2000,
+      });
+    } else if (newPass.length < 8) {
+      setLoading2(false);
+      return Toast.show('Mật khẩu cần ít nhất 8 ký tự', {
+        position: -20,
+        duration: 2000,
+      });
+    } else if (newPass !== renewPass) {
+      setLoading2(false);
+      return Toast.show('Mật khẩu nhập lại không đúng', {
+        position: -20,
+        duration: 2000,
+      });
+    }
+    updatePass
+      .updatePass(data.id, newPass)
+      .then((responseJson) => {
+        if (responseJson === 'Fail') {
+          setLoading2(false);
+          return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+            position: -20,
+            duration: 2000,
+          });
+        } else {
+          setData({
+            id: 8,
+            userName: user.tendangnhap,
+            password: newPass,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+          });
+          setLoading2(false);
+          Toast.show('Cập nhật Mật khẩu thành công', {
+            position: -20,
+            duration: 2000,
+          });
+          setnewPass('');
+          setrenewPass('');
+          setModalChangePass(!modalChangePass);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading2(false);
+        return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+          position: -20,
+          duration: 2000,
+        });
+      });
+  };
+
+  const storeData = async (value) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem('@user', jsonValue);
+    } catch (e) {
+      console.log('Error: ' + e);
+    }
+  };
+
+  const dispatch = useDispatch();
+  const logout = () => {
+    dispatch(updateCart([]));
+    dispatch(
+      updateUser({
+        id: '',
+        userName: '',
+        password: '',
+        name: '',
+        email: '',
+        phone: '',
+      }),
+    );
+    storeData(null);
+    BackHandler.exitApp();
   };
 
   var new_password = '';
@@ -126,7 +285,7 @@ export default function Account({navigation}) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('HISTORY')}
+          onPress={() => navigation.navigate('HISTORY', {idUser: data.id})}
           style={[styles.line, styles.buttonItem]}>
           <Text style={styles.buttonText}>Lịch sử đặt phòng</Text>
         </TouchableOpacity>
@@ -134,7 +293,7 @@ export default function Account({navigation}) {
         <TouchableOpacity
           onPress={() => setModalLogout(true)}
           style={styles.buttonItem}>
-          <Text style={styles.buttonText}>Thoát ứng dụng</Text>
+          <Text style={styles.buttonText}>Đăng xuất</Text>
         </TouchableOpacity>
       </LinearGradient>
 
@@ -187,9 +346,16 @@ export default function Account({navigation}) {
                 <TouchableOpacity
                   style={styles.btn}
                   onPress={() => {
-                    setPass('');
-                    setModalUpdate(!modalUpdate);
-                    setModalUpdateInfo(true);
+                    if (pass === data.password) {
+                      setPass('');
+                      setModalUpdate(!modalUpdate);
+                      setModalUpdateInfo(true);
+                    } else {
+                      Toast.show('Mật khẩu không đúng', {
+                        position: -20,
+                        duration: 2000,
+                      });
+                    }
                   }}>
                   <Text style={styles.btnText}>Cập nhật thông tin</Text>
                 </TouchableOpacity>
@@ -203,9 +369,16 @@ export default function Account({navigation}) {
                 <TouchableOpacity
                   style={styles.btn}
                   onPress={() => {
-                    setPass('');
-                    setModalUpdate(!modalUpdate);
-                    setModalChangePass(true);
+                    if (pass === data.password) {
+                      setPass('');
+                      setModalUpdate(!modalUpdate);
+                      setModalChangePass(true);
+                    } else {
+                      Toast.show('Mật khẩu không đúng', {
+                        position: -20,
+                        duration: 2000,
+                      });
+                    }
                   }}>
                   <Text style={styles.btnText}>Đổi mật khẩu</Text>
                 </TouchableOpacity>
@@ -223,10 +396,10 @@ export default function Account({navigation}) {
               colors={['rgba(248, 161, 112, 1)', 'rgba(255, 205, 97, 1)']}
               start={{x: 0, y: 0}}
               end={{x: 1, y: 0}}>
-              <Text style={styles.nameModal}>Thoát ứng dụng</Text>
+              <Text style={styles.nameModal}>Đăng xuất</Text>
             </LinearGradient>
             <Text style={styles.modalText}>
-              Bạn có chắc muốn khoát khỏi ứng dụng?
+              Bạn có chắc muốn đăng xuất khỏi ứng dụng?
             </Text>
 
             <View style={styles.button}>
@@ -249,10 +422,8 @@ export default function Account({navigation}) {
                 colors={['rgba(248, 161, 112, 1)', 'rgba(255, 205, 97, 1)']}
                 start={{x: 0, y: 0}}
                 end={{x: 1, y: 0}}>
-                <TouchableOpacity
-                  style={styles.btn}
-                  onPress={() => BackHandler.exitApp()}>
-                  <Text style={styles.btnText}>Thoát ứng dụng</Text>
+                <TouchableOpacity style={styles.btn} onPress={() => logout()}>
+                  <Text style={styles.btnText}>Đăng xuất</Text>
                 </TouchableOpacity>
               </LinearGradient>
             </View>
@@ -329,10 +500,17 @@ export default function Account({navigation}) {
                     setnewName('');
                     setnewEmail('');
                     setnewPhone('');
+                    setLoading(false);
                   }}>
                   <Text style={styles.btnText}>Thoát</Text>
                 </TouchableOpacity>
               </LinearGradient>
+
+              <ActivityIndicator
+                animating={loading}
+                color="#F8A170"
+                size="small"
+              />
 
               <LinearGradient
                 style={styles.btnCont}
@@ -342,10 +520,7 @@ export default function Account({navigation}) {
                 <TouchableOpacity
                   style={styles.btn}
                   onPress={() => {
-                    setModalUpdateInfo(!modalUpdateInfo);
-                    setnewName('');
-                    setnewEmail('');
-                    setnewPhone('');
+                    updateInfo();
                   }}>
                   <Text style={styles.btnText}>Xác nhận</Text>
                 </TouchableOpacity>
@@ -406,10 +581,17 @@ export default function Account({navigation}) {
                     setnewPass('');
                     setrenewPass('');
                     setModalChangePass(!modalChangePass);
+                    setLoading2(false);
                   }}>
                   <Text style={styles.btnText}>Thoát</Text>
                 </TouchableOpacity>
               </LinearGradient>
+
+              <ActivityIndicator
+                animating={loading2}
+                color="#F8A170"
+                size="small"
+              />
 
               <LinearGradient
                 style={styles.btnCont}
@@ -419,9 +601,7 @@ export default function Account({navigation}) {
                 <TouchableOpacity
                   style={styles.btn}
                   onPress={() => {
-                    setnewPass('');
-                    setrenewPass('');
-                    setModalChangePass(!modalChangePass);
+                    update_Pass();
                   }}>
                   <Text style={styles.btnText}>Xác nhận</Text>
                 </TouchableOpacity>
@@ -544,6 +724,7 @@ const styles = StyleSheet.create({
   },
   textInputStyle: {
     fontSize: width / 26,
+    color: '#616167',
   },
   iconInput: {
     width: width / 18,

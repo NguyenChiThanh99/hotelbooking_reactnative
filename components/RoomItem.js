@@ -146,10 +146,12 @@ export default function RoomList(props) {
     navigation.navigate('CART', {fromMain: false});
   };
 
+  const user = useSelector((state) => state.user.id);
   const storeData = async (value) => {
+    var key = '@cart' + '_' + user.toString();
     try {
       const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem('@cart', jsonValue);
+      await AsyncStorage.setItem(key, jsonValue);
     } catch (e) {
       console.log('Error: ' + e);
     }

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
@@ -15,10 +16,12 @@ import {
 import {SliderBox} from 'react-native-image-slider-box';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-root-toast';
+import {useSelector, useDispatch} from 'react-redux';
 
 import HotelItemHome from './HotelItemHome';
 import Loading from './Loading';
 import Global from './Global';
+import {updateHotel} from '../actions';
 
 import hotelLastest from '../Api/hotelLastest';
 import hotelBooked from '../Api/hotelBooked';
@@ -27,7 +30,7 @@ import logo from '../images/Logo.png';
 import searchIcon from '../images/search.png';
 var countExit = 0;
 
-export default function Home({navigation}) {
+export default function Home({navigation, route}) {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
@@ -93,9 +96,13 @@ export default function Home({navigation}) {
       });
   };
 
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
+  const hotel = useSelector((state) => state.hotel);
+
   const loadHotelBooked = () => {
     hotelBooked
-      .hotelBooked(8)
+      .hotelBooked(user.id)
       .then((responseJson) => {
         setHotel_Booked(responseJson);
         setLoading2(false);
@@ -104,7 +111,7 @@ export default function Home({navigation}) {
         console.log(err);
         setLoading2(false);
         return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
-          position: -20,
+          position: 0,
           duration: 2500,
         });
       });
@@ -124,6 +131,46 @@ export default function Home({navigation}) {
       }
     }
     return '__';
+  };
+
+  if (hotel) {
+    dispatch(updateHotel(false));
+    loadHotelBooked();
+  }
+
+  const HCM = [
+    'hồ chí minh',
+    'hồchíminh',
+    'ho chi minh',
+    'hochiminh',
+    'ho chiminh',
+    'hochi minh',
+    'hồ chíminh',
+    'hồchí minh',
+  ];
+  const HN = ['hà nội', 'hànội', 'ha noi', 'hanoi'];
+  const DN = ['đà nẵng', 'đànẵng', 'da nang', 'danang'];
+  const doSearch = () => {
+    setSearch('');
+    var input = {...search}.search.toLowerCase();
+    if (HCM.indexOf(input) !== -1) {
+      navigation.navigate('HOTEL_LIST', {
+        place: 'TP. Hồ Chí Minh',
+        id: 0,
+      });
+    } else if (HN.indexOf(input) !== -1) {
+      navigation.navigate('HOTEL_LIST', {
+        place: 'TP. Hà Nội',
+        id: 1,
+      });
+    } else if (DN.indexOf(input) !== -1) {
+      navigation.navigate('HOTEL_LIST', {
+        place: 'TP. Đà Nẵng',
+        id: 2,
+      });
+    } else {
+      navigation.navigate('SEARCH', {search: search});
+    }
   };
 
   return (
@@ -148,16 +195,14 @@ export default function Home({navigation}) {
             value={search}
             onSubmitEditing={(event) => {
               if (search !== '') {
-                setSearch('');
-                navigation.navigate('SEARCH', {search: search});
+                doSearch();
               }
             }}
           />
           <TouchableOpacity
             onPress={() => {
               if (search !== '') {
-                setSearch('');
-                navigation.navigate('SEARCH', {search: search});
+                doSearch();
               }
             }}>
             <Image style={styles.searchIcon} source={searchIcon} />
@@ -226,38 +271,40 @@ export default function Home({navigation}) {
           )}
         </View>
 
-        <View style={styles.listCont}>
-          <Text style={styles.headerList}>Đã đặt</Text>
-          {Loading2 ? (
-            <Loading />
-          ) : (
-            <FlatList
-              contentContainerStyle={styles.listHotel}
-              showsHorizontalScrollIndicator={false}
-              horizontal
-              data={hotel_Booked}
-              renderItem={({item}) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate('HOTEL_DETAIL', {
-                      hotel: item,
-                      avgMark: checkAvgMark(item.id),
-                    })
-                  }
-                  key={item.id}>
-                  <HotelItemHome
-                    img={{uri: item.hinhanhsp}}
-                    name={item.tensp}
-                    place={item.diachi}
-                    price={item.giasp}
-                    rating={checkAvgMark(item.id)}
-                  />
-                </TouchableOpacity>
-              )}
-              keyExtractor={(item) => item.id.toString()}
-            />
-          )}
-        </View>
+        {hotel_Booked.length === 0 ? null : (
+          <View style={styles.listCont}>
+            <Text style={styles.headerList}>Đã đặt</Text>
+            {Loading2 ? (
+              <Loading />
+            ) : (
+              <FlatList
+                contentContainerStyle={styles.listHotel}
+                showsHorizontalScrollIndicator={false}
+                horizontal
+                data={hotel_Booked}
+                renderItem={({item}) => (
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate('HOTEL_DETAIL', {
+                        hotel: item,
+                        avgMark: checkAvgMark(item.id),
+                      })
+                    }
+                    key={item.id}>
+                    <HotelItemHome
+                      img={{uri: item.hinhanhsp}}
+                      name={item.tensp}
+                      place={item.diachi}
+                      price={item.giasp}
+                      rating={checkAvgMark(item.id)}
+                    />
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item) => item.id.toString()}
+              />
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );

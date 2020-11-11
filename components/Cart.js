@@ -257,10 +257,12 @@ export default function Cart({route, navigation}) {
     return buffet + spa + phonghop + giatui + xeduadon + dvphong + doingoaite;
   };
 
+  const user = useSelector((state) => state.user.id);
   const storeData = async (value) => {
+    var key = '@cart' + '_' + user.toString();
     try {
       const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem('@cart', jsonValue);
+      await AsyncStorage.setItem(key, jsonValue);
     } catch (e) {
       console.log('Error: ' + e);
     }
@@ -293,7 +295,7 @@ export default function Cart({route, navigation}) {
           style={{
             flex: 1,
             alignSelf: 'center',
-            marginTop: height / 3,
+            marginTop: height / 2.5,
             color: '#999',
           }}>
           Không có sản phẩm nào trong giỏ hàng{' '}
@@ -312,22 +314,24 @@ export default function Cart({route, navigation}) {
         />
       )}
 
-      <View style={styles.footer}>
-        <Text style={styles.total}>
-          {Global.currencyFormat(total.toString())} đ
-        </Text>
-        <LinearGradient
-          style={styles.btnCont}
-          colors={['rgba(248, 161, 112, 1)', 'rgba(255, 205, 97, 1)']}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}>
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => navigation.navigate('PERSONAL_INFORMATION')}>
-            <Text style={styles.btnText}>Đặt phòng</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
+      {cartData.length === 0 ? null : (
+        <View style={styles.footer}>
+          <Text style={styles.total}>
+            {Global.currencyFormat(total.toString())} đ
+          </Text>
+          <LinearGradient
+            style={styles.btnCont}
+            colors={['rgba(248, 161, 112, 1)', 'rgba(255, 205, 97, 1)']}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 0}}>
+            <TouchableOpacity
+              style={styles.btn}
+              onPress={() => navigation.navigate('PERSONAL_INFORMATION')}>
+              <Text style={styles.btnText}>Đặt phòng</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      )}
 
       <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>

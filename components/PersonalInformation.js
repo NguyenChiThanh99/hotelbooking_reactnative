@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-root-toast';
+import {useSelector} from 'react-redux';
 
 import Global from './Global';
 
@@ -18,9 +19,10 @@ import emailIcon from '../images/email-w.png';
 import phoneIcon from '../images/phone-w.png';
 
 export default function PersonalInformation({navigation}) {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const user = useSelector((state) => state.user);
+  const [name, setName] = useState(user.hoten);
+  const [phone, setPhone] = useState(user.sodienthoai);
+  const [email, setEmail] = useState(user.email);
 
   const goToPayment = () => {
     if (name === '' || phone === '' || email === '') {
@@ -194,6 +196,7 @@ const styles = StyleSheet.create({
   },
   textInputStyle: {
     fontSize: width / 26,
+    color: '#616167',
   },
   body: {
     flex: 1,

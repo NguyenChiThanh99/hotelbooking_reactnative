@@ -95,22 +95,31 @@ function Tabs({navigation}) {
     </Tab.Navigator>
   );
 }
-var flag = false;
 
-export default function Main() {
+var flag = false;
+var preUser = 0;
+
+export default function Main({route}) {
   const dispatch = useDispatch();
+  const userid = useSelector((state) => state.user);
   const getData = async () => {
+    var key = '@cart' + '_' + userid.id.toString();
     try {
-      const jsonValue = await AsyncStorage.getItem('@cart');
+      const jsonValue = await AsyncStorage.getItem(key);
       dispatch(updateCart(jsonValue !== null ? JSON.parse(jsonValue) : []));
       return jsonValue !== null ? JSON.parse(jsonValue) : null;
     } catch (e) {
       console.log('Error: ' + e);
     }
   };
-  if (flag === false) {
+
+  if (preUser !== userid.id) {
+    flag = false;
+  }
+  if (flag === false && userid !== null) {
     getData();
     flag = true;
+    preUser = userid.id;
   }
 
   return (
