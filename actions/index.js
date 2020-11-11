@@ -1,4 +1,4 @@
-import {UPDATE, UPDATE_USER, UPDATE_HOTELBOOKED} from './type';
+import {UPDATE, UPDATE_USER, UPDATE_HOTELBOOKED, UPDATE_RATING} from './type';
 
 export const updateCart = (newCart) => {
   return {
@@ -18,5 +18,12 @@ export const updateHotel = (newHotel) => {
   return {
     type: UPDATE_HOTELBOOKED,
     newHotel: newHotel,
+  };
+};
+
+export const updateRating = (newRating) => {
+  return {
+    type: UPDATE_RATING,
+    newRating: newRating,
   };
 };

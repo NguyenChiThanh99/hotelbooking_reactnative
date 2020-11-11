@@ -21,7 +21,7 @@ import {useSelector, useDispatch} from 'react-redux';
 import HotelItemHome from './HotelItemHome';
 import Loading from './Loading';
 import Global from './Global';
-import {updateHotel} from '../actions';
+import {updateHotel, updateRating} from '../actions';
 
 import hotelLastest from '../Api/hotelLastest';
 import hotelBooked from '../Api/hotelBooked';
@@ -62,7 +62,6 @@ export default function Home({navigation, route}) {
   const [Loading2, setLoading2] = useState(false);
   const [hotel_Lastest, setHotel_Lastest] = useState([]);
   const [hotel_Booked, setHotel_Booked] = useState([]);
-  const [avgMark, setAvgMark] = useState([]);
 
   const images = [
     'https://2.bp.blogspot.com/-N16KsEGiApQ/VoE7KUbjmTI/AAAAAAAAACQ/aRP23lgxFMU/s1600/6hourly%2Bbanner.jpg',
@@ -83,7 +82,7 @@ export default function Home({navigation, route}) {
       .hotelLastest()
       .then((responseJson) => {
         setHotel_Lastest(responseJson.hotelLastest);
-        setAvgMark(responseJson.avgMark);
+        dispatch(updateRating(responseJson.avgMark));
         setLoading1(false);
       })
       .catch((err) => {
@@ -99,6 +98,7 @@ export default function Home({navigation, route}) {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
   const hotel = useSelector((state) => state.hotel);
+  const rating = useSelector((state) => state.rating);
 
   const loadHotelBooked = () => {
     hotelBooked
@@ -125,9 +125,9 @@ export default function Home({navigation, route}) {
   }
 
   const checkAvgMark = (id) => {
-    for (let i = 0; i < avgMark.length; i++) {
-      if (avgMark[i].idkhachsan === id) {
-        return avgMark[i].avg;
+    for (let i = 0; i < rating.length; i++) {
+      if (rating[i].idkhachsan === id) {
+        return rating[i].avg;
       }
     }
     return '__';

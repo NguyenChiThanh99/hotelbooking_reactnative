@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -8,73 +9,55 @@ import {
   FlatList,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import Toast from 'react-native-root-toast';
+import {useSelector} from 'react-redux';
 
 import Global from './Global';
 import HotelItemList from './HotelItemList';
 import BadgeComponent from './BadgeComponent';
+import Loading from './Loading';
+
+import search from '../Api/search';
 
 import backIcon from '../images/chevron-left-fff1dc.png';
 import searchIcon from '../images/search.png';
 
 export default function Search({route, navigation}) {
-  const dataSample = [
-    {
-      id: 1,
-      name: 'Saigon Sparkle Hotel',
-      price: '2300000',
-      image:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      description:
-        'Saigon Sparkle Hotel tọa lạc ở trung tâm thành phố Hồ Chí Minh, cách Chợ Bến Thành chỉ 2 phút đi bộ. Khách sạn có nhà hàng, chỗ đỗ xe và Wi-Fi miễn phí. Các phòng lắp máy điều hòa tại đây đều được trang bị TV màn hình phẳng, tủ lạnh mini và két an toàn. Phòng cũng có máy sấy tóc và dép.',
-      address: '229 Le Thanh Ton, Quận 1, TP. Hồ Chí Minh, Việt Nam',
-      rating: 9.5,
-    },
-    {
-      id: 2,
-      name: 'Saigon Sparkle Hotel',
-      price: '2300000',
-      image:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      description:
-        'Saigon Sparkle Hotel tọa lạc ở trung tâm thành phố Hồ Chí Minh, cách Chợ Bến Thành chỉ 2 phút đi bộ. Khách sạn có nhà hàng, chỗ đỗ xe và Wi-Fi miễn phí. Các phòng lắp máy điều hòa tại đây đều được trang bị TV màn hình phẳng, tủ lạnh mini và két an toàn. Phòng cũng có máy sấy tóc và dép.',
-      address: '229 Le Thanh Ton, Quận 1, TP. Hồ Chí Minh, Việt Nam',
-      rating: 9.5,
-    },
-    {
-      id: 3,
-      name: 'Saigon Sparkle Hotel',
-      price: '2300000',
-      image:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      description:
-        'Saigon Sparkle Hotel tọa lạc ở trung tâm thành phố Hồ Chí Minh, cách Chợ Bến Thành chỉ 2 phút đi bộ. Khách sạn có nhà hàng, chỗ đỗ xe và Wi-Fi miễn phí. Các phòng lắp máy điều hòa tại đây đều được trang bị TV màn hình phẳng, tủ lạnh mini và két an toàn. Phòng cũng có máy sấy tóc và dép.',
-      address: '229 Le Thanh Ton, Quận 1, TP. Hồ Chí Minh, Việt Nam',
-      rating: 9.5,
-    },
-    {
-      id: 4,
-      name: 'Saigon Sparkle Hotel',
-      price: '2300000',
-      image:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      description:
-        'Saigon Sparkle Hotel tọa lạc ở trung tâm thành phố Hồ Chí Minh, cách Chợ Bến Thành chỉ 2 phút đi bộ. Khách sạn có nhà hàng, chỗ đỗ xe và Wi-Fi miễn phí. Các phòng lắp máy điều hòa tại đây đều được trang bị TV màn hình phẳng, tủ lạnh mini và két an toàn. Phòng cũng có máy sấy tóc và dép.',
-      address: '229 Le Thanh Ton, Quận 1, TP. Hồ Chí Minh, Việt Nam',
-      rating: 9.5,
-    },
-    {
-      id: 5,
-      name: 'Saigon Sparkle Hotel',
-      price: '2300000',
-      image:
-        'https://imgcy.trivago.com/c_limit,d_dummy.jpeg,f_auto,h_1300,q_auto,w_2000/itemimages/96/95/96959_v6.jpeg',
-      description:
-        'Saigon Sparkle Hotel tọa lạc ở trung tâm thành phố Hồ Chí Minh, cách Chợ Bến Thành chỉ 2 phút đi bộ. Khách sạn có nhà hàng, chỗ đỗ xe và Wi-Fi miễn phí. Các phòng lắp máy điều hòa tại đây đều được trang bị TV màn hình phẳng, tủ lạnh mini và két an toàn. Phòng cũng có máy sấy tóc và dép.',
-      address: '229 Le Thanh Ton, Quận 1, TP. Hồ Chí Minh, Việt Nam',
-      rating: 9.5,
-    },
-  ];
-  const [search, setSearch] = useState(route.params.search.search);
+  const [keyword, setKeyword] = useState(route.params.search.search);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState([]);
+  const rating = useSelector((state) => state.rating);
+
+  useEffect(() => {
+    loadResult();
+  }, []);
+
+  const loadResult = () => {
+    setLoading(true);
+    search
+      .search(keyword)
+      .then((responseJson) => {
+        setResult(responseJson);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+        return Toast.show('Lỗi! Vui lòng kiểm tra kết nối internet', {
+          position: -20,
+          duration: 2500,
+        });
+      });
+  };
+
+  const checkAvgMark = (id) => {
+    for (let i = 0; i < rating.length; i++) {
+      if (rating[i].idkhachsan === id) {
+        return rating[i].avg;
+      }
+    }
+    return '__';
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -96,17 +79,19 @@ export default function Search({route, navigation}) {
               autoCapitalize="none"
               underlineColorAndroid="#ffffff"
               onChangeText={(text) => {
-                setSearch({search: text});
+                setKeyword(text);
               }}
-              value={search}
+              value={keyword}
               onSubmitEditing={(event) => {
-                if (search !== '') {
+                if (keyword !== '') {
+                  loadResult();
                 }
               }}
             />
             <TouchableOpacity
               onPress={() => {
-                if (search !== '') {
+                if (keyword !== '') {
+                  loadResult();
                 }
               }}>
               <Image style={styles.searchIcon} source={searchIcon} />
@@ -119,25 +104,34 @@ export default function Search({route, navigation}) {
         </TouchableOpacity>
       </LinearGradient>
 
-      <FlatList
-        contentContainerStyle={styles.listHotel}
-        showsHorizontalScrollIndicator={false}
-        data={dataSample}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('HOTEL_DETAIL', {hotel: item})}>
-            <HotelItemList
-              img={item.image}
-              name={item.name}
-              rating={item.rating}
-              price={item.price}
-              address={item.address}
-              description={item.description}
-            />
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item) => item.id.toString()}
-      />
+      {loading || result.length === 0 ? (
+        <Loading />
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.listHotel}
+          showsHorizontalScrollIndicator={false}
+          data={result}
+          renderItem={({item}) => (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('HOTEL_DETAIL', {
+                  hotel: item,
+                  avgMark: checkAvgMark(item.id),
+                })
+              }>
+              <HotelItemList
+                img={item.hinhanhsp}
+                name={item.tensp}
+                rating={checkAvgMark(item.id)}
+                price={item.giasp}
+                address={item.diachi}
+                description={item.mota}
+              />
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      )}
     </View>
   );
 }

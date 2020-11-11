@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-root-toast';
+import {useSelector} from 'react-redux';
 
 import hotel from '../Api/hotel';
 
@@ -23,9 +24,9 @@ import backIcon from '../images/chevron-left-fff1dc.png';
 export default function HotelList({navigation, route}) {
   const [loading, setLoading] = useState(false);
   const [hotel_List, setHotel_List] = useState([]);
-  const [avgMark, setAvgMark] = useState([]);
   const [page, setPage] = useState(1);
   const [endOfArray, setEndOfArray] = useState(false);
+  const rating = useSelector((state) => state.rating);
 
   useEffect(() => {
     loadHotel();
@@ -36,11 +37,8 @@ export default function HotelList({navigation, route}) {
     hotel
       .hotel(page, route.params.id + 1)
       .then((responseJson) => {
-        if (responseJson.hotellist.length !== 0) {
-          setHotel_List(hotel_List.concat(responseJson.hotellist));
-          if (page === 1) {
-            setAvgMark(responseJson.avgMark);
-          }
+        if (responseJson.length !== 0) {
+          setHotel_List(hotel_List.concat(responseJson));
           setLoading(false);
           setPage(page + 1);
         } else {
@@ -63,9 +61,9 @@ export default function HotelList({navigation, route}) {
   };
 
   const checkAvgMark = (id) => {
-    for (let i = 0; i < avgMark.length; i++) {
-      if (avgMark[i].idkhachsan === id) {
-        return avgMark[i].avg;
+    for (let i = 0; i < rating.length; i++) {
+      if (rating[i].idkhachsan === id) {
+        return rating[i].avg;
       }
     }
     return '__';
