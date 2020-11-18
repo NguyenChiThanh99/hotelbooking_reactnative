@@ -27,7 +27,8 @@ import Payment from './Payment';
 import History from './History';
 import BookingDetail from './BookingDetail';
 import Search from './Search';
-import Review from './Review';
+import ListReview from './ListReview';
+import FullImage from './FullImage';
 import {updateCart} from '../actions';
 
 const Tab = createBottomTabNavigator();
@@ -205,12 +206,20 @@ export default function Main({route}) {
         component={Search}
       />
       <MainStack.Screen
-        name="REVIEW"
+        name="LIST_REVIEW"
         options={{
           headerShown: false,
           ...TransitionPresets.SlideFromRightIOS,
         }}
-        component={Review}
+        component={ListReview}
+      />
+      <MainStack.Screen
+        name="FULLIMAGE"
+        options={{
+          headerShown: false,
+          ...TransitionPresets.SlideFromRightIOS,
+        }}
+        component={FullImage}
       />
     </MainStack.Navigator>
   );

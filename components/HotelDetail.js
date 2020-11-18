@@ -101,7 +101,14 @@ export default function HotelDetail({navigation, route}) {
             <Image style={styles.iconInfo2} source={ratingIcon} />
           </View>
           <TouchableOpacity
-            onPress={() => navigation.navigate('REVIEW', {fromMain: false})}>
+            onPress={() =>
+              navigation.navigate('LIST_REVIEW', {
+                name: tensp,
+                id: id,
+                avgMark: route.params.avgMark,
+                navigation: navigation,
+              })
+            }>
             <Text style={styles.info2}>Đánh giá khách sạn</Text>
           </TouchableOpacity>
         </View>

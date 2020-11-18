@@ -93,9 +93,7 @@ export default function Cart({route, navigation}) {
     </TouchableOpacity>
   );
   const homeElement = (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('TABS')}
-      visible={false}>
+    <TouchableOpacity onPress={() => navigation.navigate('TABS')}>
       <Image source={homeIcon} style={styles.homeIcon} />
     </TouchableOpacity>
   );
