@@ -18,6 +18,6 @@ module.exports = {
       return true;
     }
   },
-  link: 'http://192.168.43.39:8080/hotelbooking/',
-  //link: 'https://hotelbooking-reactnative.000webhostapp.com/hotelbooking/',
+  //link: 'http://192.168.43.39:8080/hotelbooking/',
+  link: 'https://hotelbooking-reactnative.000webhostapp.com/hotelbooking/',
 };
